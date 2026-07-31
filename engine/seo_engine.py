@@ -4,90 +4,166 @@ import os
 import tempfile
 
 
+def clean_columns(df):
+    df.columns = [
+        str(c).strip()
+        for c in df.columns
+    ]
+    return df
+
+
+
 def extract_files(path):
+
     files = {}
 
     if path.lower().endswith(".zip"):
+
         temp = tempfile.mkdtemp()
 
-        with zipfile.ZipFile(path, "r") as z:
+        with zipfile.ZipFile(path,"r") as z:
             z.extractall(temp)
 
+
         for root, dirs, filenames in os.walk(temp):
+
             for filename in filenames:
+
                 if filename.lower().endswith(".csv"):
-                    files[filename.lower()] = os.path.join(root, filename)
+
+                    files[filename.lower()] = os.path.join(
+                        root,
+                        filename
+                    )
 
     else:
-        files[os.path.basename(path).lower()] = path
+
+        files[
+            os.path.basename(path).lower()
+        ] = path
+
 
     return files
 
 
+
+def number(value):
+
+    try:
+        return float(
+            str(value)
+            .replace(",","")
+            .strip()
+        )
+
+    except:
+        return 0
+
+
+
 def analyze(uploaded_files):
+
 
     pages = None
     queries = None
 
-    csv_files = {}
 
-    # Extract ZIP files
-    for name, path in uploaded_files.items():
-        csv_files.update(extract_files(path))
+    csv_files={}
 
 
-    # Detect GSC files
-    for name, path in csv_files.items():
+    for name,path in uploaded_files.items():
 
-        df = pd.read_csv(path)
-
-        columns = [str(c).lower() for c in df.columns]
-
-        if "top pages" in columns:
-            pages = df
-
-        if "top queries" in columns:
-            queries = df
+        csv_files.update(
+            extract_files(path)
+        )
 
 
-    report = {
+    for name,path in csv_files.items():
+
+        try:
+
+            df = pd.read_csv(path)
+
+            df = clean_columns(df)
+
+
+            cols=[
+                c.lower()
+                for c in df.columns
+            ]
+
+
+            if "top pages" in cols:
+
+                pages=df
+
+
+            if "top queries" in cols:
+
+                queries=df
+
+
+        except Exception as e:
+
+            print(
+                "CSV ERROR:",
+                e
+            )
+
+
+
+    report={
+
         "score":100,
+
         "pages":[],
+
         "keywords":[],
+
         "recommendations":[]
+
     }
 
 
-    # Page analysis
 
     if pages is not None:
 
+
         for _,row in pages.iterrows():
 
-            current = row.get(
-                "Last 3 months Clicks",
-                0
+
+            current = number(
+                row.get(
+                    "Last 3 months Clicks",
+                    0
+                )
             )
 
-            previous = row.get(
-                "Previous 3 months Clicks",
-                0
+
+            previous = number(
+                row.get(
+                    "Previous 3 months Clicks",
+                    0
+                )
             )
 
 
-            loss = current - previous
+            loss=current-previous
 
 
             if loss < 0:
 
+
                 report["pages"].append({
 
-                    "page": row.get(
+                    "page":
+                    row.get(
                         "Top pages",
                         ""
                     ),
 
-                    "loss": round(loss,2),
+                    "loss":
+                    round(loss,2),
 
                     "action":
                     "Refresh content, improve internal links and recover rankings."
@@ -95,24 +171,31 @@ def analyze(uploaded_files):
                 })
 
 
-    # Keyword analysis
 
     if queries is not None:
 
+
         for _,row in queries.iterrows():
 
-            current = row.get(
-                "Last 3 months Position",
-                0
+
+            current = number(
+                row.get(
+                    "Last 3 months Position",
+                    0
+                )
             )
 
-            previous = row.get(
-                "Previous 3 months Position",
-                0
+
+            previous = number(
+                row.get(
+                    "Previous 3 months Position",
+                    0
+                )
             )
 
 
             if current > previous:
+
 
                 report["keywords"].append({
 
@@ -123,33 +206,29 @@ def analyze(uploaded_files):
                     ),
 
                     "change":
-                    round(current-previous,2),
+                    round(
+                        current-previous,
+                        2
+                    ),
 
                     "action":
-                    "Optimize ranking page and improve search intent coverage."
+                    "Improve content relevance and internal links."
 
                 })
 
 
-    if len(report["pages"]) < 5:
-        report["score"] -= 15
 
-    if len(report["keywords"]) < 5:
-        report["score"] -= 15
+    report["recommendations"]=[
 
+        "Recover pages losing clicks first.",
 
+        "Improve keywords moving down in rankings.",
 
-    report["recommendations"] = [
+        "Optimize titles and descriptions for CTR.",
 
-        "Fix pages losing clicks before creating new content.",
+        "Add FAQs and schema.",
 
-        "Recover keywords dropping from page 1.",
-
-        "Improve CTR for high impression queries.",
-
-        "Add FAQs and structured data.",
-
-        "Strengthen internal linking."
+        "Build stronger internal links."
 
     ]
 
