@@ -1,0 +1,108 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+<title>RankRevive AI Dashboard</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body>
+
+<div class="container">
+
+<header>
+<h1>🚀 RankRevive AI</h1>
+<p>Google Search Console Traffic Recovery Dashboard</p>
+</header>
+
+
+<div class="cards">
+
+<div class="card score">
+<h3>SEO Health Score</h3>
+<div class="number">{{report.score}}<span>/100</span></div>
+<p>Recovery Analysis Score</p>
+</div>
+
+<div class="card">
+<h3>Pages Impacted</h3>
+<div class="big">{{report.pages|length}}</div>
+<p>Traffic declining pages</p>
+</div>
+
+<div class="card">
+<h3>Keyword Opportunities</h3>
+<div class="big">{{report.keywords|length}}</div>
+<p>Ranking improvement areas</p>
+</div>
+
+</div>
+
+
+<section class="panel">
+
+<h2>📉 Pages Losing Traffic</h2>
+
+<table>
+<tr>
+<th>Priority</th>
+<th>Page</th>
+<th>Click Loss</th>
+<th>Recommended Action</th>
+</tr>
+
+{% for p in report.pages %}
+<tr>
+<td><span class="high">HIGH</span></td>
+<td>{{p.page}}</td>
+<td>{{p.loss}}</td>
+<td>{{p.action}}</td>
+</tr>
+{% endfor %}
+
+</table>
+
+</section>
+
+
+<section class="panel">
+
+<h2>🔍 Keyword Recovery Opportunities</h2>
+
+<table>
+<tr>
+<th>Keyword</th>
+<th>Position Change</th>
+<th>Strategy</th>
+</tr>
+
+{% for k in report.keywords %}
+<tr>
+<td>{{k.keyword}}</td>
+<td>{{k.change}}</td>
+<td>{{k.action}}</td>
+</tr>
+{% endfor %}
+
+</table>
+
+</section>
+
+
+<section class="panel ai">
+
+<h2>🤖 AI SEO Recovery Strategy</h2>
+
+<ul>
+{% for r in report.recommendations %}
+<li>{{r}}</li>
+{% endfor %}
+</ul>
+
+</section>
+
+
+</div>
+
+</body>
+</html>
