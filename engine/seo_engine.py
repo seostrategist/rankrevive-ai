@@ -1,65 +1,157 @@
-
 import pandas as pd
+import zipfile
+import os
+import tempfile
 
-def load_csv(path):
-    return pd.read_csv(path)
 
-def analyze(files):
-    pages = pd.DataFrame()
-    queries = pd.DataFrame()
+def extract_files(path):
+    files = {}
 
-    for name, path in files.items():
-        df = load_csv(path)
+    if path.lower().endswith(".zip"):
+        temp = tempfile.mkdtemp()
 
-        if "Top pages" in df.columns:
+        with zipfile.ZipFile(path, "r") as z:
+            z.extractall(temp)
+
+        for root, dirs, filenames in os.walk(temp):
+            for filename in filenames:
+                if filename.lower().endswith(".csv"):
+                    files[filename.lower()] = os.path.join(root, filename)
+
+    else:
+        files[os.path.basename(path).lower()] = path
+
+    return files
+
+
+def analyze(uploaded_files):
+
+    pages = None
+    queries = None
+
+    csv_files = {}
+
+    # Extract ZIP files
+    for name, path in uploaded_files.items():
+        csv_files.update(extract_files(path))
+
+
+    # Detect GSC files
+    for name, path in csv_files.items():
+
+        df = pd.read_csv(path)
+
+        columns = [str(c).lower() for c in df.columns]
+
+        if "top pages" in columns:
             pages = df
 
-        if "Top queries" in df.columns:
+        if "top queries" in columns:
             queries = df
 
+
     report = {
-        "score": 100,
-        "pages": [],
-        "keywords": [],
-        "recommendations": []
+        "score":100,
+        "pages":[],
+        "keywords":[],
+        "recommendations":[]
     }
 
-    if not pages.empty:
-        for _, row in pages.iterrows():
-            current = row["Last 3 months Clicks"]
-            previous = row["Previous 3 months Clicks"]
+
+    # Page analysis
+
+    if pages is not None:
+
+        for _,row in pages.iterrows():
+
+            current = row.get(
+                "Last 3 months Clicks",
+                0
+            )
+
+            previous = row.get(
+                "Previous 3 months Clicks",
+                0
+            )
+
+
             loss = current - previous
 
+
             if loss < 0:
+
                 report["pages"].append({
-                    "page": row["Top pages"],
+
+                    "page": row.get(
+                        "Top pages",
+                        ""
+                    ),
+
                     "loss": round(loss,2),
-                    "action": "Refresh content, improve internal links and recover rankings."
+
+                    "action":
+                    "Refresh content, improve internal links and recover rankings."
+
                 })
 
-    if not queries.empty:
-        for _, row in queries.iterrows():
-            current = row["Last 3 months Position"]
-            previous = row["Previous 3 months Position"]
+
+    # Keyword analysis
+
+    if queries is not None:
+
+        for _,row in queries.iterrows():
+
+            current = row.get(
+                "Last 3 months Position",
+                0
+            )
+
+            previous = row.get(
+                "Previous 3 months Position",
+                0
+            )
+
 
             if current > previous:
+
                 report["keywords"].append({
-                    "keyword": row["Top queries"],
-                    "change": round(current-previous,2),
-                    "action": "Optimize ranking page and improve search intent coverage."
+
+                    "keyword":
+                    row.get(
+                        "Top queries",
+                        ""
+                    ),
+
+                    "change":
+                    round(current-previous,2),
+
+                    "action":
+                    "Optimize ranking page and improve search intent coverage."
+
                 })
+
 
     if len(report["pages"]) < 5:
         report["score"] -= 15
+
     if len(report["keywords"]) < 5:
         report["score"] -= 15
 
+
+
     report["recommendations"] = [
-        "Fix pages losing clicks before publishing new content.",
-        "Recover keywords moving from page 1 to page 2.",
-        "Improve CTR for high impression keywords.",
-        "Add FAQs and schema where relevant.",
-        "Strengthen internal linking between related pages."
+
+        "Fix pages losing clicks before creating new content.",
+
+        "Recover keywords dropping from page 1.",
+
+        "Improve CTR for high impression queries.",
+
+        "Add FAQs and structured data.",
+
+        "Strengthen internal linking."
+
     ]
+
 
     return report
