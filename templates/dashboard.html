@@ -1,42 +1,412 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>RankRevive AI</title>
+
+<title>RankRevive AI Report</title>
+
 <link rel="stylesheet" href="/static/style.css">
+
+<style>
+
+body{
+    background:#f4f7fb;
+    font-family:Arial, sans-serif;
+}
+
+.container{
+    max-width:1200px;
+    margin:40px auto;
+    padding:20px;
+}
+
+
+.header{
+    background:linear-gradient(135deg,#111827,#2563eb);
+    color:white;
+    padding:35px;
+    border-radius:20px;
+    margin-bottom:25px;
+}
+
+
+.header h1{
+    margin:0;
+    font-size:36px;
+}
+
+
+.header p{
+    margin-top:10px;
+    font-size:18px;
+}
+
+
+.card-grid{
+
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+    gap:20px;
+
+}
+
+
+.card{
+
+    background:white;
+    padding:25px;
+    border-radius:18px;
+    box-shadow:0 10px 25px rgba(0,0,0,.08);
+    margin-bottom:25px;
+
+}
+
+
+.score{
+
+    font-size:48px;
+    font-weight:bold;
+    color:#2563eb;
+
+}
+
+
+h2{
+
+color:#111827;
+
+}
+
+
+.table{
+
+width:100%;
+border-collapse:collapse;
+
+}
+
+
+.table th{
+
+background:#2563eb;
+color:white;
+padding:12px;
+text-align:left;
+
+}
+
+
+.table td{
+
+padding:12px;
+border-bottom:1px solid #eee;
+
+}
+
+
+.badge{
+
+background:#fee2e2;
+color:#991b1b;
+padding:5px 12px;
+border-radius:20px;
+
+}
+
+
+.recommendation{
+
+background:#eff6ff;
+padding:15px;
+border-radius:10px;
+margin-bottom:10px;
+
+}
+
+
+.btn{
+
+display:inline-block;
+background:#2563eb;
+color:white;
+padding:12px 25px;
+border-radius:10px;
+text-decoration:none;
+
+}
+
+
+</style>
+
 </head>
+
 
 <body>
 
+
 <div class="container">
 
-<header>
-<h1>🚀 RankRevive AI</h1>
-<p>Google Search Console Traffic Recovery Dashboard</p>
-</header>
 
-<div class="panel">
+<div class="header">
 
-<h2>Upload GSC Data</h2>
+<h1>🚀 RankRevive AI Report</h1>
 
 <p>
-Upload your Google Search Console ZIP export file.
+Google Search Console Traffic Recovery Analysis
 </p>
 
-<form method="POST" enctype="multipart/form-data">
+</div>
 
-<input type="file" name="files" multiple required>
 
-<br><br>
 
-<button type="submit">
-Analyze SEO Data
-</button>
+<div class="card-grid">
 
-</form>
+
+<div class="card">
+
+<h2>SEO Health Score</h2>
+
+<div class="score">
+
+{{ report.score }}/100
 
 </div>
 
 </div>
+
+
+
+<div class="card">
+
+<h2>Traffic Issues</h2>
+
+<h3>
+
+{{ report.pages|length }}
+
+</h3>
+
+<p>
+Pages losing clicks
+</p>
+
+</div>
+
+
+
+<div class="card">
+
+<h2>Keyword Opportunities</h2>
+
+<h3>
+
+{{ report.keywords|length }}
+
+</h3>
+
+<p>
+Keywords requiring optimization
+</p>
+
+</div>
+
+
+</div>
+
+
+
+
+
+<div class="card">
+
+<h2>📉 Pages Losing Traffic</h2>
+
+
+{% if report.pages %}
+
+
+<table class="table">
+
+<tr>
+
+<th>Page</th>
+
+<th>Click Loss</th>
+
+<th>Recommended Action</th>
+
+</tr>
+
+
+
+{% for page in report.pages %}
+
+
+<tr>
+
+<td>
+{{ page.page }}
+</td>
+
+
+<td>
+
+<span class="badge">
+
+{{ page.loss }}
+
+</span>
+
+</td>
+
+
+<td>
+
+{{ page.action }}
+
+</td>
+
+
+</tr>
+
+
+{% endfor %}
+
+
+</table>
+
+
+{% else %}
+
+<p>
+No traffic loss detected.
+</p>
+
+{% endif %}
+
+
+
+</div>
+
+
+
+
+
+
+
+<div class="card">
+
+
+<h2>🔎 Keyword Opportunities</h2>
+
+
+{% if report.keywords %}
+
+
+<table class="table">
+
+
+<tr>
+
+<th>Keyword</th>
+
+<th>Position Change</th>
+
+<th>Action</th>
+
+</tr>
+
+
+
+{% for keyword in report.keywords %}
+
+
+<tr>
+
+
+<td>
+
+{{ keyword.keyword }}
+
+</td>
+
+
+<td>
+
+{{ keyword.change }}
+
+</td>
+
+
+<td>
+
+{{ keyword.action }}
+
+</td>
+
+
+</tr>
+
+
+{% endfor %}
+
+
+</table>
+
+
+{% else %}
+
+<p>
+No keyword opportunities found.
+</p>
+
+{% endif %}
+
+
+</div>
+
+
+
+
+
+
+
+
+<div class="card">
+
+
+<h2>🤖 AI Recommendations</h2>
+
+
+{% for item in report.recommendations %}
+
+
+<div class="recommendation">
+
+{{ item }}
+
+</div>
+
+
+{% endfor %}
+
+
+</div>
+
+
+
+
+
+<a href="/" class="btn">
+
+Analyze Another Website
+
+</a>
+
+
+
+</div>
+
 
 </body>
+
 </html>
